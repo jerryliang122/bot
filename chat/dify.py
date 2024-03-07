@@ -1,6 +1,8 @@
 import aiohttp
 import json
 import sys
+import aiohttp_sse_client
+import asyncio
 
 
 class dify:
@@ -45,6 +47,8 @@ class dify:
         返回值:
         无返回值，但会异步处理接收到的服务器发送事件（SSE）。
         """
+        # 将session 存储为内部变量
+        self.session_id = session_id
         # 如果没有配置环境变量直接返回一段消息
         if self.check_status == False:
             return "请检查dify环境变量是否配置正确"
@@ -69,19 +73,24 @@ class dify:
             async with session.post(url, headers=headers, json=data) as resp:
                 # 检查响应状态码
                 if resp.status == 200:
-                    buffer = ""  # 用于累积响应数据的缓冲区
-                    async for chunk in resp.content.iter_any():
-                        buffer += chunk.decode("utf-8")  # 解码响应内容
-                        parts = buffer.split("\n\n")  # 根据换行符分割响应数据
-                        for part in parts[
-                            :-1
-                        ]:  # 遍历分割后的数据（忽略最后一部分，因为它可能是不完整的）
-                            if part.startswith("data: "):  # 找到包含实际数据的部分
-                                data = part[len("data: ") :].strip()  # 提取数据
-                                answer = await self.handle_message(
-                                    session_id, data
-                                )  # 异步处理接收到的数据
-                                if answer is not None:  # 如果answer不为空
-                                    yield answer
+                    sse_client = aiohttp_sse_client.Client(resp)  # 创建一个 sse 客户端
+                    try:
+                        # 迭代 sse 响应的数据
+                        async for data in sse_client.events():
+                            answer = await self.handle_message(session_id, data.data)
+                            if answer is not None:  # 如果answer不为空
+                                yield answer
+                    except asyncio.CancelledError:
+                        # 处理取消异常
+                        print("Cancelled")
+                    except Exception as e:
+                        # 处理其他异常
+                        print(e)
+                    finally:
+                        # 关闭 sse 客户端
+                        await sse_client.close()
                 else:
                     return "服务器返回了错误的状态码" + str(resp.status)
+
+    def __del__(self):
+        pass
