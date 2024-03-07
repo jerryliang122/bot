@@ -1,28 +1,15 @@
 import aiohttp
 import json
-import sys
+import os
 import aiohttp_sse_client
 import asyncio
 
 
 class dify:
     def __init__(self):
-        # 先运行检查环境变量
-        self.check_status = self.check()
-        if self.check_status == True:
-            self.dify_url = sys.environ.get("dify_url")
-            # 检查环境变量中是否有dify_token
-            self.dify_token = sys.environ.get("dify_token")
-
-    # 检查环境变量
-    def check(self):
-        if "dify_url" not in sys.environ:
-            return False
+        self.dify_url = os.environ.get("dify_url")
         # 检查环境变量中是否有dify_token
-        elif "dify_token" not in sys.environ:
-            return False
-        else:
-            return True
+        self.dify_token = os.environ.get("dify_token")
 
     async def handle_message(session_id, data):
         # 将data 转为字典
