@@ -49,6 +49,7 @@ class dify:
         """
         # 将session 存储为内部变量
         self.session_id = session_id
+        self.user = user
         # 如果没有配置环境变量直接返回一段消息
         if self.check_status == False:
             return "请检查dify环境变量是否配置正确"
@@ -92,5 +93,22 @@ class dify:
                 else:
                     return "服务器返回了错误的状态码" + str(resp.status)
 
-    def __del__(self):
-        pass
+    async def close(self):
+        # 构建请求的URL和头部
+        url = self.dify_url + f"/conversations/{self.session_id}"
+        headers = {
+            "Authorization": f"Bearer {self.dify_token}",  # 使用Bearer Token进行授权
+            "Content-Type": "application/json",
+        }
+
+        # 准备请求体数据
+        data = {
+            "user": self.user,  # 指定用户
+        }
+        async with aiohttp.ClientSession() as session:
+            async with session.delete(url, headers=headers, json=data) as resp:
+                # 检查响应状态码
+                if resp.status == 200:
+                    print("会话已结束")
+                else:
+                    print("服务器返回了错误的状态码" + str(resp.status))
