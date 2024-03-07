@@ -93,9 +93,20 @@ class dify:
                 else:
                     return "服务器返回了错误的状态码" + str(resp.status)
 
-    async def close(self):
+    async def close(self, session_id, user):
+        """
+        异步关闭当前会话。
+
+        该方法会向服务器发送一个请求，以结束当前用户的会话。
+
+        参数:
+        - self: 对象自身的引用。
+
+        返回值:
+        - 无返回值。
+        """
         # 构建请求的URL和头部
-        url = self.dify_url + f"/conversations/{self.session_id}"
+        url = self.dify_url + f"/conversations/{session_id}"
         headers = {
             "Authorization": f"Bearer {self.dify_token}",  # 使用Bearer Token进行授权
             "Content-Type": "application/json",
@@ -103,7 +114,7 @@ class dify:
 
         # 准备请求体数据
         data = {
-            "user": self.user,  # 指定用户
+            "user": user,  # 指定用户
         }
         async with aiohttp.ClientSession() as session:
             async with session.delete(url, headers=headers, json=data) as resp:
