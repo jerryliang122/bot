@@ -1,7 +1,7 @@
 from khl import Bot, Message, EventTypes
 from chat.dify import dify
 
-channel_id == None
+dify_channel_id == None
 
 
 def init(bot: Bot):
@@ -22,15 +22,15 @@ def init(bot: Bot):
 
     @bot.command(name="dify")
     async def dify_chat(msg: Message, ages: str):
-        global channel_id
+        global dify_channel_id
         if ages == "on":
             # 启动dify
             # 获取频道ID
-            channel_id = msg.ctx.channel.id
+            dify_channel_id = msg.ctx.channel.id
             await msg.reply("已开启dify知识库的AI 聊天功能", use_quote=False)
         elif ages == "off":
             # 关闭dify
-            channel_id = None
+            dify_channel_id = None
             await msg.reply("已关闭dify知识库的AI 聊天功能", use_quote=False)
         else:
             # 未指定参数
@@ -39,15 +39,15 @@ def init(bot: Bot):
     # 监听该频道事件
     @bot.on_message()
     async def chat(msg: Message):
-        global channel_id
-        if msg.ctx.channel.id != channel_id:
+        global dify_channel_id
+        if msg.ctx.channel.id != dify_channel_id:
             return
         # 实例化dify
         chat_dify = dify()
         if msg.content == "":
             return
         reply_list = []
-        reply = await chat_dify.ask(channel_id, msg.author, msg.content)
+        reply = await chat_dify.ask(dify_channel_id, msg.author, msg.content)
         # 缓存reply 生成器的结果直到结束
         async for i in reply:
             reply_list.append(i)
