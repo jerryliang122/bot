@@ -2,6 +2,7 @@ import aiohttp
 import json
 import os
 import asyncio
+import logging
 
 
 class dify:
@@ -69,11 +70,13 @@ class dify:
                         for part in parts[:-1]:
                             if part.startswith("data: ") and len(part) > len("data: "):
                                 part = part.replace("data: ", "")
+                                # logging.info(part)
                                 data = part.strip()
                                 answer, conversation_id = await self.handle_message(
                                     data
                                 )
                                 if answer != None:  # 如果answer不为空
+                                    logging.info(answer)
                                     yield (answer, conversation_id)
                 else:
                     yield "服务器返回了错误的状态码" + str(resp.status)
