@@ -1,7 +1,6 @@
 import aiohttp
 import json
 import os
-import aiohttp_sse_client
 import asyncio
 
 
@@ -11,18 +10,20 @@ class dify:
         # 检查环境变量中是否有dify_token
         self.dify_token = os.environ.get("dify_token")
 
-    async def handle_message(session_id, data):
+    async def handle_message(self, data):
         # 将data 转为字典
         data = json.loads(data)
         # 检查该字典中的conversation_id 的值是否为session_id
-        if data["conversation_id"] != session_id:
-            return
+        # if data["conversation_id"] != session_id:
+        #    return
         # 读取data中的event
         event = data["event"]
-        if event == "agent_message":
-            return data["answer"]
+        if event == "agent_message" or event == "message":
+            return (data["answer"], data["conversation_id"])
+        else:
+            return (None, None)
 
-    async def ask(self, session_id, user, query):
+    async def ask(self, session_id: str, user: str, query: str):
         """
         异步发送查询请求并处理响应。
 
@@ -38,8 +39,8 @@ class dify:
         self.session_id = session_id
         self.user = user
         # 如果没有配置环境变量直接返回一段消息
-        if self.check_status == False:
-            return "请检查dify环境变量是否配置正确"
+        if self.dify_url == None or self.dify_token == None:
+            yield "请检查dify环境变量是否配置正确"
         # 构建请求的URL和头部
         url = self.dify_url + "/chat-messages"
         headers = {
@@ -61,24 +62,21 @@ class dify:
             async with session.post(url, headers=headers, json=data) as resp:
                 # 检查响应状态码
                 if resp.status == 200:
-                    sse_client = aiohttp_sse_client.Client(resp)  # 创建一个 sse 客户端
-                    try:
-                        # 迭代 sse 响应的数据
-                        async for data in sse_client.events():
-                            answer = await self.handle_message(session_id, data.data)
-                            if answer is not None:  # 如果answer不为空
-                                yield answer
-                    except asyncio.CancelledError:
-                        # 处理取消异常
-                        print("Cancelled")
-                    except Exception as e:
-                        # 处理其他异常
-                        print(e)
-                    finally:
-                        # 关闭 sse 客户端
-                        await sse_client.close()
+                    buffer = ""  # 用于累积响应数据的缓冲区
+                    async for chunk in resp.content.iter_any():
+                        buffer += chunk.decode("utf-8")  # 解码响应内容
+                        parts = buffer.split("\n\n")
+                        for part in parts[:-1]:
+                            if part.startswith("data: ") and len(part) > len("data: "):
+                                part = part.replace("data: ", "")
+                                data = part.strip()
+                                answer, conversation_id = await self.handle_message(
+                                    data
+                                )
+                                if answer != None:  # 如果answer不为空
+                                    yield (answer, conversation_id)
                 else:
-                    return "服务器返回了错误的状态码" + str(resp.status)
+                    yield "服务器返回了错误的状态码" + str(resp.status)
 
     async def close(self, session_id, user):
         """
