@@ -22,7 +22,7 @@ def init(bot: Bot):
                 Module.Header("T.G.超图书馆员♂"),
                 Module.Context("dify知识库的AI 聊天功能"),
                 Module.Section(
-                    "使用方法：\n/dify on 开启dify知识库的AI 聊天功能\n/dify off 关闭dify知识库的AI 聊天功能"
+                    "使用方法：\n/dify on 开启dify知识库的AI 聊天功能\n/dify off 关闭dify知识库的AI 聊天功能\n /dify restart 重启dify知识库的AI 聊天功能\n"
                 ),
             )
         cm.append(c)
@@ -44,6 +44,12 @@ def init(bot: Bot):
             dify_conversation_id = None
             author_id = None
             await msg.reply("已关闭dify知识库的AI 聊天功能", use_quote=False)
+        elif ages == "restart":
+            # 重启dify
+            chat_dify = dify()
+            await chat_dify.close(dify_conversation_id, author_id)
+            dify_conversation_id = None
+            await msg.reply("已重启dify知识库的AI 聊天功能", use_quote=False)
         else:
             # 未指定参数
             await msg.reply("未指定参数", use_quote=False)
