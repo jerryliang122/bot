@@ -8,26 +8,6 @@ author_id = None
 
 
 def init(bot: Bot):
-    @bot.command(name="help")
-    async def help(msg: Message, ages: str = None):
-        cm = CardMessage()
-        if bool(ages) == False:
-            c = Card(
-                Module.Header("T.G.超图书馆员♂"),
-                Module.Context("正在开发意想不到的功能"),
-                Module.Section("/help chat 查看chat相关说明"),
-            )
-        if ages == "chat":
-            c = Card(
-                Module.Header("T.G.超图书馆员♂"),
-                Module.Context("dify知识库的AI 聊天功能"),
-                Module.Section(
-                    "使用方法：\n/dify on 开启dify知识库的AI 聊天功能\n/dify off 关闭dify知识库的AI 聊天功能\n /dify restart 重启dify知识库的AI 聊天功能\n"
-                ),
-            )
-        cm.append(c)
-        await msg.reply(cm, use_quote=False)
-
     @bot.command(name="dify")
     async def dify_chat(msg: Message, ages: str):
         global dify_channel_id, author_id, dify_conversation_id
