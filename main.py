@@ -3,6 +3,7 @@ import os
 import logging
 import kook.chat_dify as chat_dify
 import kook.help as helps
+import kook.drawing as drawing
 
 logging.basicConfig(level="INFO")
 
@@ -15,6 +16,7 @@ bot = Bot(token=os.environ.get("kook_token"))
 async def bot_init(bot: Bot):
     helps.init(bot)
     chat_dify.init(bot)  # 调用支线文件test.py中的init函数来注册命令
+    drawing.init(bot)
 
 
 bot.run()

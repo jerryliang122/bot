@@ -65,7 +65,7 @@ class stable_diffusion:
         async with aiohttp.ClientSession() as session:
             async with session.post(url, json=self.params) as response:
                 if response.status == 200:
-                    r = response.json()
+                    r = await response.json()
                     # 将json中的images的列表中的值取出
                     return (r["images"], True)
                 else:
